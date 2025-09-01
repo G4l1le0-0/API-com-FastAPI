@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, HTTPException, status
 from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 
-from workout_api.atleta.schemas import AtletaIn, AtletaOut, AtletaUpdate
+from workout_api.atleta.schemas import AtletaIn, AtletaOut, AtletaUpdate, AtletaListOut
 from workout_api.atleta.models import AtletaModel
 from workout_api.categorias.models import CategoriaModel
 from workout_api.centro_treinamento.models import CentroTreinamentoModel
@@ -150,4 +150,16 @@ async def delete(id: UUID4, db_session: DatabaseDependency) -> None:
     
     await db_session.delete(atleta)
     await db_session.commit()
+
+@router.get(
+    '/', 
+    summary='Consultar todos os Atletas',
+    status_code=status.HTTP_200_OK,
+    response_model=list[AtletaListOut],  
+)
+async def query(db_session: DatabaseDependency) -> list[AtletaListOut]:  
+    atletas: list[AtletaOut] = (await db_session.execute(select(AtletaModel))).scalars().all()
+    
+    return [AtletaListOut.model_validate(atleta) for atleta in atletas]
+
 
